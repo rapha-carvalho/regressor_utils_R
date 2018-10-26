@@ -1,19 +1,10 @@
-library(dplyr)
-library(MASS)
-library(gtools)
-library(imputeTS)
-
-
 find.best.model <- function(y, x, path, r2=0, n.var){
   
   #Read the data
-  read.data <- function (filepath, cols=NULL) {
+  read.data <- function (filepath) {
     df <- read.csv(filepath, sep = ";", stringsAsFactors = FALSE)
     df <- na.replace(df, 0)
-    var.names <- colnames(df)
-    sel.names <- setdiff(var.names, cols)
-    df <- df %>% select(sel.names)
-    df
+    return(df)
   }
 
   #Calculate the adjusted R2 of every X variable vs Y variable.
@@ -78,6 +69,22 @@ find.best.model <- function(y, x, path, r2=0, n.var){
     return(names(var.filtered))
   }
   
+  reg.model <- function(y, x, data){
+    #Select the variables
+    if(class(x) == "numeric"){
+      var.names <- colnames(data)[x]
+    } else{
+      var.names <- x
+    }
+    y.var <- paste(y, "~")
+    x.var <- paste0(var.names, collapse = "+")
+    #Create lm formula
+    form <- as.formula(paste(y.var, x.var))
+    #Generate the lm models
+    lm_model <- lm(data = data, formula = form)
+    return(lm_model)
+  }
+  
   
   #Return a list of all possible combination of models.
   model.combinations <- function(y, x, data){
@@ -132,6 +139,5 @@ find.best.model <- function(y, x, path, r2=0, n.var){
     best.model <- all.models[[best.model]]
     
     return(best.model)
-    
     
 }
